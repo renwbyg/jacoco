@@ -11,14 +11,14 @@
  *******************************************************************************/
 package org.jacoco.examples;
 
+import org.jacoco.core.data.ExecutionDataWriter;
+import org.jacoco.core.runtime.RemoteControlReader;
+import org.jacoco.core.runtime.RemoteControlWriter;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-
-import org.jacoco.core.data.ExecutionDataWriter;
-import org.jacoco.core.runtime.RemoteControlReader;
-import org.jacoco.core.runtime.RemoteControlWriter;
 
 /**
  * This example connects to a coverage agent that run in output mode
@@ -27,7 +27,7 @@ import org.jacoco.core.runtime.RemoteControlWriter;
  */
 public final class ExecutionDataClient {
 
-	private static final String DESTFILE = "jacoco-client.exec";
+	private static final String DESTFILE = "D:\\jacoco_info\\jacoco.exec";
 
 	private static final String ADDRESS = "localhost";
 
