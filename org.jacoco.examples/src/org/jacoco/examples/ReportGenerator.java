@@ -134,7 +134,10 @@ public class ReportGenerator {
 
 		//基于分支比较覆盖，参数1：本地仓库，参数2：开发分支（预发分支），参数3：基线分支(不传时默认为master)
 		//本地Git路径，新分支 第三个参数不传时默认比较maser，传参数为待比较的基线分支
-		final CoverageBuilder coverageBuilder = new CoverageBuilder("D:\\jacoco_info\\jacocoTest","dev", "master");
+//		final CoverageBuilder coverageBuilder = new CoverageBuilder("D:\\jacoco_info\\jacocoTest","dev", "master");
+
+		//基于提交版本覆盖，参数1：本地仓库, 参数2：分支名称
+		final CoverageBuilder coverageBuilder = new CoverageBuilder("D:\\jacoco_info\\jacocoTest", "dev");
 
 		//基于Tag比较的覆盖 参数1：本地仓库，参数2：代码分支，参数3：新Tag(预发版本)，参数4：基线Tag（变更前的版本）
 		//final CoverageBuilder coverageBuilder = new CoverageBuilder("E:\\Git-pro\\JacocoTest","daily","v004","v003");

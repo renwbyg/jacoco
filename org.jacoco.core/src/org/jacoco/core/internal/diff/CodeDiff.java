@@ -13,12 +13,17 @@ package org.jacoco.core.internal.diff;
 
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.diff.*;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffFormatter;
+import org.eclipse.jgit.diff.Edit;
+import org.eclipse.jgit.diff.EditList;
+import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.patch.FileHeader;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.StringUtils;
@@ -29,7 +34,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * 代码版本比较
@@ -37,6 +45,64 @@ import java.util.concurrent.*;
 public class CodeDiff {
     public final static String REF_HEADS = "refs/heads/";
     public final static  String MASTER = "master";
+
+
+
+    /**
+     * 两个最近版本之间的比较
+     * 即两个最近commitId比较
+     * @param gitPath
+     * @param newBranchName
+     * @param oldBranchName
+     * @return
+     */
+    public static List<ClassInfo> diffVersionToVersion(String gitPath, String branchName) {
+        List<ClassInfo> classInfos = diffVersion(gitPath, branchName);
+        return classInfos;
+    }
+
+    private static List<ClassInfo> diffVersion(String gitPath, String branchName) {
+        try {
+            //  获取本地分支
+            GitAdapter gitAdapter = new GitAdapter(gitPath);
+            Git git = gitAdapter.getGit();
+            Ref localBranchRef = gitAdapter.getRepository().exactRef(REF_HEADS + branchName);
+            //  更新本地分支
+            gitAdapter.checkOutAndPull(localBranchRef, branchName);
+
+            List<RevCommit> commitList = new ArrayList<RevCommit>();
+            //获取最近提交的两次记录
+            Iterable<RevCommit> commits = git.log().setMaxCount(2).call();
+            for(RevCommit commit:commits){
+                commitList.add(commit);
+                //打印出提交日志
+                System.out.println(commit.getFullMessage());
+                //打印出提交时间
+                System.out.println(commit.getAuthorIdent().getWhen());
+            }
+
+            if(commitList.size()==2) {
+                RevCommit newCommit = commitList.get(0);
+                RevCommit oldCommit = commitList.get(1);
+                String commitIdNameNew = newCommit.getName();
+                String commitIdNameOld = oldCommit.getName();
+                AbstractTreeIterator newTree = gitAdapter.prepareTreeParser(newCommit);
+                AbstractTreeIterator oldTree = gitAdapter.prepareTreeParser(oldCommit);
+                List<DiffEntry> diffs = git.diff().setOldTree(oldTree).setNewTree(newTree).setShowNameAndStatusOnly(true).call();
+
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                DiffFormatter df = new DiffFormatter(out);
+                //设置比较器为忽略空白字符对比（Ignores all whitespace）
+                df.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
+                df.setRepository(git.getRepository());
+                List<ClassInfo> allClassInfos = batchPrepareDiffMethodForTag(gitAdapter, commitIdNameNew, commitIdNameOld, df, diffs);
+                return allClassInfos;
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        return  new ArrayList<ClassInfo>();
+    }
 
     /**
      * 分支和分支之间的比较
@@ -57,8 +123,8 @@ public class CodeDiff {
             Ref localBranchRef = gitAdapter.getRepository().exactRef(REF_HEADS + newBranchName);
             Ref localMasterRef = gitAdapter.getRepository().exactRef(REF_HEADS + oldBranchName);
             //  更新本地分支
-            gitAdapter.checkOutAndPull(localMasterRef, oldBranchName);
             gitAdapter.checkOutAndPull(localBranchRef, newBranchName);
+            gitAdapter.checkOutAndPull(localMasterRef, oldBranchName);
             //  获取分支信息
             AbstractTreeIterator newTreeParser = gitAdapter.prepareTreeParser(localBranchRef);
             AbstractTreeIterator oldTreeParser = gitAdapter.prepareTreeParser(localMasterRef);

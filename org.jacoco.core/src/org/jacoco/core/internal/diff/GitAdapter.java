@@ -136,6 +136,26 @@ public class GitAdapter {
         walk.dispose();
         return treeParser;
     }
+
+    /**
+     * 根据commit信息 分析分支树结构信息
+     * @param commit
+     * @param repository
+     * @return
+     * @throws IOException
+     */
+    public AbstractTreeIterator prepareTreeParser(RevCommit commit) throws IOException {
+        RevWalk walk = new RevWalk(repository);
+        RevTree tree = walk.parseTree(commit.getTree().getId());
+        CanonicalTreeParser oldTreeParser = new CanonicalTreeParser();
+        ObjectReader reader = repository.newObjectReader();
+        oldTreeParser.reset(reader, tree.getId());
+        walk.dispose();
+        return oldTreeParser;
+    }
+
+
+
     /**
      * 切换分支
      * @param branchName    分支名称
