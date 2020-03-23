@@ -14,7 +14,6 @@ package org.jacoco.examples;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
-import org.jacoco.core.internal.diff.GitAdapter;
 import org.jacoco.core.tools.ExecFileLoader;
 import org.jacoco.report.DirectorySourceFileLocator;
 import org.jacoco.report.FileMultiReportOutput;
@@ -127,7 +126,7 @@ public class ReportGenerator {
 //		return coverageBuilder.getBundle(title);
 
 		//git登录授权
-		GitAdapter.setCredentialsProvider("renwbyg", "wb@rp0925");
+//		GitAdapter.setCredentialsProvider("renwbyg", "wb@rp0925");
 		//全量覆盖
 //		final CoverageBuilder coverageBuilder = new CoverageBuilder();
 
